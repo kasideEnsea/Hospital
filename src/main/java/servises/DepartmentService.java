@@ -1,10 +1,9 @@
 package servises;
 
-import dao2.DepartmentDao;
+import dao.DepartmentDao;
 import domain.Department;
 import utills.ConnectionUtils;
 
-import javax.security.auth.login.Configuration;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;

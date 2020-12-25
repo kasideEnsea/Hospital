@@ -1,29 +1,31 @@
-package dao2;
+package dao;
 
-
-import domain.Gender;
-import domain.Patient;
-import mappers.PatientsMappers;
-import queries.PatientQueries;
+import domain.Department;
+import mappers.DepartmentMappers;
+import queries.DepartmentQueries;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PatientDao implements Dao<Patient>{
-    private Connection connection;
-    DepartmentDao departmentDao;
+public class DepartmentDao implements Dao<Department> {
 
-    public PatientDao(Connection connection) {
+    private Connection connection;
+
+
+    public DepartmentDao(Connection connection) {
         this.connection = connection;
     }
 
     @Override
-    public Patient get(int id) throws SQLException {
+    public Department get(int id) throws SQLException {
         try (Statement stmt = connection.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(PatientQueries.GET + id)) {
+            try (ResultSet rs = stmt.executeQuery(DepartmentQueries.GET + id)) {
                 while (rs.next()) {
-                    return PatientsMappers.mapEntityToModel(rs);
+                    return new Department(rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getInt("patient_count")
+                    );
                 }
             }
         } catch (SQLException e) {
@@ -33,14 +35,16 @@ public class PatientDao implements Dao<Patient>{
     }
 
     @Override
-    public List<Patient> getAll() {
-        final List<Patient> result = new ArrayList<>();
+    public List<Department> getAll() {
+        final List<Department> result = new ArrayList<>();
 
         try (Statement stmt = connection.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(PatientQueries.GET_ALL)) {
+            try (ResultSet rs = stmt.executeQuery(DepartmentQueries.GET_ALL)) {
                 while (rs.next()) {
-                    result.add(PatientsMappers.mapEntityToModel(rs)
-                    );
+                    result.add(new Department(rs.getInt("id"),
+                            rs.getString("name"),
+                            rs.getInt("patient_count")
+                    ));
                 }
             }
         } catch (SQLException e) {
@@ -52,12 +56,10 @@ public class PatientDao implements Dao<Patient>{
     }
 
     @Override
-    public void create(Patient model) {
-        int department_id = departmentDao.getByName(model.getDepartmentName()).getId();
-        try (PreparedStatement preparedStatement = connection.prepareStatement(PatientQueries.CREATE)
+    public void create(Department model) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(DepartmentQueries.CREATE)
         ){
-            PatientsMappers.mapModelToEntity(model, preparedStatement, 1);
-            preparedStatement.setInt(4, department_id);
+            DepartmentMappers.mapModelToEntity(model, preparedStatement, 1);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
@@ -65,12 +67,11 @@ public class PatientDao implements Dao<Patient>{
     }
 
     @Override
-    public void update(int id, Patient model) {
-        int department_id = departmentDao.getByName(model.getDepartmentName()).getId();
-        try (PreparedStatement preparedStatement = connection.prepareStatement(PatientQueries.UPDATE)) {
-            PatientsMappers.mapModelToEntity(model, preparedStatement, 1);
-            preparedStatement.setInt(4,department_id);
-            preparedStatement.setInt(5, id);
+    public void update(int id, Department model) {
+        try (PreparedStatement preparedStatement = connection.prepareStatement(DepartmentQueries.UPDATE)) {
+            int count = 1;
+            DepartmentMappers.mapModelToEntity(model, preparedStatement, 1);
+            preparedStatement.setInt(count, id);
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
@@ -79,7 +80,7 @@ public class PatientDao implements Dao<Patient>{
 
     @Override
     public void delete(int id) {
-        try (PreparedStatement preparedStatement = connection.prepareStatement(PatientQueries.DELETE)
+        try (PreparedStatement preparedStatement = connection.prepareStatement(DepartmentQueries.DELETE)
         ) {
             preparedStatement.setInt(1, id);
             if (preparedStatement.executeUpdate() == 0) {
@@ -93,14 +94,13 @@ public class PatientDao implements Dao<Patient>{
     @Override
     public void setConnection(Connection connection) {
         this.connection = connection;
-        departmentDao = new DepartmentDao(connection);
     }
 
-    public Patient getByName(String name){
+    public Department getByName(String name){
         try (Statement stmt = connection.createStatement()) {
-            try (ResultSet rs = stmt.executeQuery(PatientQueries.GET_BY_NAME + name)) {
+            try (ResultSet rs = stmt.executeQuery(DepartmentQueries.GET_BY_NAME + name)) {
                 while (rs.next()) {
-                    return PatientsMappers.mapEntityToModel(rs);
+                    return DepartmentMappers.mapEntityToModel(rs);
                 }
             }
         } catch (SQLException e) {
@@ -110,7 +110,8 @@ public class PatientDao implements Dao<Patient>{
     }
 
     public void deleteByName(String name){
-        try (PreparedStatement preparedStatement = connection.prepareStatement(PatientQueries.DELETE_BY_NAME)
+        try (PreparedStatement preparedStatement = connection.prepareStatement(
+                DepartmentQueries.DELETE_BY_NAME)
         ) {
             preparedStatement.setString(1, name);
             if (preparedStatement.executeUpdate() == 0) {
@@ -120,4 +121,5 @@ public class PatientDao implements Dao<Patient>{
             System.err.println( e.getClass().getName()+": "+ e.getMessage() );
         }
     }
+
 }

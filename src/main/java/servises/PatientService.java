@@ -1,7 +1,7 @@
 package servises;
 
-import dao2.DepartmentDao;
-import dao2.PatientDao;
+import dao.DepartmentDao;
+import dao.PatientDao;
 import domain.Department;
 import domain.Patient;
 import utills.ConnectionUtils;
